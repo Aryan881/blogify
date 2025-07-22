@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include("./partials/head") %>
+    <title>Blogify - Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --gradient-start: #3498db;
+            --gradient-end: #2ecc71;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 70px;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            padding: 60px 0;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="rgba(255,255,255,0.1)"/></svg>');
+            opacity: 0.1;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 200px;
+        }
+
+        .blog-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .blog-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.5s ease, opacity 0.3s ease;
+            opacity: 0;
+            background-color: #f8f9fa;
+        }
+
+        .blog-image.loaded {
+            opacity: 1;
+        }
+
+        .blog-image.error {
+            opacity: 1;
+            background-color: #f8f9fa;
+        }
+
+        .blog-card:hover .blog-image {
+            transform: scale(1.05);
+        }
+
+        .blog-content {
+            padding: 20px;
+        }
+
+        .blog-title {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .blog-excerpt {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .blog-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .author-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            opacity: 0;
+            background-color: #f8f9fa;
+            transition: opacity 0.3s ease;
+        }
+
+        .author-avatar.loaded {
+            opacity: 1;
+        }
+
+        .author-avatar.error {
+            opacity: 1;
+            background-color: #f8f9fa;
+        }
+
+        .author-name {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .blog-date {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .read-more {
+            display: inline-block;
+            padding: 8px 20px;
+            background: linear-gradient(45deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .read-more:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            color: white;
+        }
+
+        .category-tag {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: var(--accent-color);
+            font-weight: 500;
+            backdrop-filter: blur(5px);
+        }
+
+        .no-blogs {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .blog-grid {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+
+            .search-container {
+                padding: 0 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include("./partials/nav") %>
+
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Discover Amazing Stories</h1>
+            <p class="hero-subtitle">Explore a world of knowledge, creativity, and inspiration</p>
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search for articles...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </div>
+    </section>
+
+    <div class="blog-grid" id="blogGrid">
+        <% if (blogs && blogs.length > 0) { %>
+            <% blogs.forEach((blog, index) => { %>
+                <article class="blog-card" data-aos="fade-up" data-aos-delay="<%= index * 100 %>">
+                    <div class="category-tag">Technology</div>
+                    <% if(blog.coverimageurl) { %>
+                        <img src="<%= blog.coverimageurl %>" 
+                             alt="Blog cover image" 
+                             class="blog-image"
+                             onload="handleImageLoad(this)"
+                             onerror="handleImageError(this)"
+                             loading="lazy">
+                    <% } else { %>
+                        <img src="/images/default.png" 
+                             alt="Default blog image" 
+                             class="blog-image"
+                             onload="handleImageLoad(this)"
+                             onerror="handleImageError(this)"
+                             loading="lazy">
+                    <% } %>
+                    <div class="blog-content">
+                        <h2 class="blog-title"><%= blog.title %></h2>
+                        <p class="blog-excerpt">
+                            <%= blog.body ? (blog.body.length > 150 ? blog.body.substring(0, 150) + '...' : blog.body) : 'No content available' %>
+                        </p>
+                        <a href="/blog/<%= blog._id %>" class="read-more">Read More</a>
+                    </div>
+                    <div class="blog-meta">
+                        <div class="author-info">
+                            <img src="<%= blog.createdby ? blog.createdby.profileimg || '/images/default.png' : '/images/default.png' %>" 
+                                 alt="Author avatar" 
+                                 class="author-avatar"
+                                 onload="handleImageLoad(this)"
+                                 onerror="handleImageError(this)"
+                                 loading="lazy">
+                            <span class="author-name">
+                                <%= blog.createdby ? blog.createdby.fullname : 'Anonymous' %>
+                            </span>
+                        </div>
+                        <span class="blog-date">
+                            <%= blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : 'Date not available' %>
+                        </span>
+                    </div>
+                </article>
+            <% }); %>
+        <% } else { %>
+            <div class="no-blogs">
+                <p>No blogs available at the moment.</p>
+            </div>
+        <% } %>
+    </div>
+
+    <%- include("./partials/script") %>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS animations with proper configuration
+        AOS.init({
+            duration: 800,
+            once: true,
+            startEvent: 'DOMContentLoaded',
+            disable: 'mobile'
+        });
+
+        // Track loaded images
+        let loadedImages = 0;
+        const totalImages = document.querySelectorAll('img').length;
+
+        function handleImageLoad(img) {
+            setTimeout(() => {
+                img.classList.add('loaded');
+                loadedImages++;
+                checkAllImagesLoaded();
+            }, 50);
+        }
+
+        function handleImageError(img) {
+            img.src = '/images/default.png';
+            
+            setTimeout(() => {
+                img.classList.add('error', 'loaded');
+                loadedImages++;
+                checkAllImagesLoaded();
+            }, 50);
+        }
+
+        function checkAllImagesLoaded() {
+            if (loadedImages === totalImages) {
+                window.stop();
+                AOS.refresh();
+            }
+        }
+
+        // Handle already loaded images
+        document.querySelectorAll('img').forEach(img => {
+            if (img.complete) {
+                handleImageLoad(img);
+            }
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('.search-input');
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const blogCards = document.querySelectorAll('.blog-card');
+            
+            blogCards.forEach(card => {
+                const title = card.querySelector('.blog-title').textContent.toLowerCase();
+                const content = card.querySelector('.blog-excerpt').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Ensure content is visible on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const blogGrid = document.getElementById('blogGrid');
+            if (blogGrid) {
+                blogGrid.style.opacity = '1';
+            }
+        });
+    </script>
+</body>
+</html> 
